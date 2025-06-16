@@ -280,7 +280,7 @@ const SimpleWearquery = () => {
       <div className="min-h-screen bg-gray-50 flex">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-        <div className="flex-1 lg:ml-64">
+        <div className="flex-1 lg:ml-0">
           <Header setSidebarOpen={setSidebarOpen} />
           <MainContent />
         </div>
