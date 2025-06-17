@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, createContext, useContext } from "react";
+import React, { useState, createContext, useContext, useEffect } from "react";
 import Image from "next/image"
 
 // Mock data for professional demo
@@ -212,7 +212,18 @@ const icons = {
 const WearqueryApp = () => {
   const [currentView, setCurrentView] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [orders, setOrders] = useState(mockOrders);
+const [orders, setOrders] = useState(() => {
+  if (typeof window !== 'undefined') {
+    try {
+      const savedOrders = localStorage.getItem('wearql_orders');
+      return savedOrders ? JSON.parse(savedOrders) : mockOrders;
+    } catch (error) {
+      console.error('Failed to load orders:', error);
+      return mockOrders;
+    }
+  }
+  return mockOrders;
+});
   const [customers, setCustomers] = useState(mockCustomers);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -233,6 +244,16 @@ const WearqueryApp = () => {
     emailAlerts: true,
     smsAlerts: true,
   });
+
+    useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('wearql_orders', JSON.stringify(orders));
+      } catch (error) {
+        console.error('Failed to save orders:', error);
+      }
+    }
+  }, [orders]);
 
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders((prevOrders) =>
@@ -891,7 +912,7 @@ const OrdersView = () => {
     },
     { 
       id: "ready", 
-      title: "Ready for Delivery", 
+      title: "Complete", 
       icon: icons.check,
       color: "bg-green-50 border-green-200",
       headerColor: "bg-green-100 text-green-800"
@@ -1069,85 +1090,76 @@ const OrdersView = () => {
                   {/* Order Cards */}
                   <div className="space-y-3">
                     {columnOrders.map(order => {
-                      const daysUntilDue = getDaysUntilDue(order.dueDate);
-                      const isOverdue = daysUntilDue < 0;
-                      const isDueSoon = daysUntilDue <= 3 && daysUntilDue >= 0;
+  const daysUntilDue = getDaysUntilDue(order.dueDate);
+  const isOverdue = daysUntilDue < 0;
+  const isDueSoon = daysUntilDue <= 3 && daysUntilDue >= 0;
 
-                      return (
-                        <div
-                          key={order.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, order, column.id)}
-                          onDragEnd={handleDragEnd}
-                          className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 cursor-move hover:shadow-md transition-all duration-200 ${getPriorityColor(order.priority)}`}
-                        >
-                          {/* Order Header */}
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-medium text-gray-800 text-sm">
-                                {order.id}
-                              </span>
-                              <div className={`w-2 h-2 rounded-full ${getPriorityDot(order.priority)}`} />
-                            </div>
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              isOverdue ? 'bg-red-100 text-red-800' :
-                              isDueSoon ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-600'
-                            }`}>
-                              {isOverdue ? `${Math.abs(daysUntilDue)}d overdue` :
-                               isDueSoon ? `${daysUntilDue}d left` :
-                               `${daysUntilDue} days`}
-                            </span>
-                          </div>
+  return (
+    <div
+      key={order.id}
+      draggable
+      onDragStart={(e) => handleDragStart(e, order, column.id)}
+      onDragEnd={handleDragEnd}
+      className={`bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-move hover:shadow-md transition-all duration-200 ${getPriorityColor(order.priority)}`}
+    >
+      {/* Order Header - Clean and minimal */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center space-x-2">
+          <span className="text-xs font-mono text-gray-500">{order.id}</span>
+          <div className={`w-1.5 h-1.5 rounded-full ${getPriorityDot(order.priority)}`} />
+        </div>
+        <span className={`text-xs px-1.5 py-0.5 rounded-md font-medium ${
+          isOverdue ? 'bg-red-100 text-red-700' :
+          isDueSoon ? 'bg-amber-100 text-amber-700' :
+          'bg-gray-100 text-gray-600'
+        }`}>
+          {isOverdue ? `${Math.abs(daysUntilDue)}d late` :
+           isDueSoon ? `${daysUntilDue}d left` :
+           formatDate(order.dueDate)}
+        </span>
+      </div>
 
-                          {/* Customer Info */}
-                          <div className="space-y-2">
-                            <div className="flex items-center text-sm">
-                              <span className="mr-1">{icons.user}</span>
-                              <span className="font-medium text-gray-700">{order.customer}</span>
-                            </div>
-                            
-                            <div className="text-sm text-gray-600 font-medium">
-                              {order.garmentType}
-                            </div>
+      {/* Main Content - Focus on essentials */}
+      <div className="space-y-2">
+        {/* Customer Name - Most important */}
+        <h4 className="font-semibold text-gray-900 text-sm leading-tight">
+          {order.customer}
+        </h4>
+        
+        {/* Garment Type - Secondary info */}
+        <p className="text-sm text-gray-600">
+          {order.garmentType}
+        </p>
 
-                            <div className="text-xs text-gray-500">
-                              {order.fabric}
-                            </div>
+        {/* Price - Financial info */}
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-sm font-medium text-gray-900">
+            ₹{order.pricing.totalAmount.toLocaleString()}
+          </span>
+          {order.pricing.balanceAmount > 0 && (
+            <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+              ₹{order.pricing.balanceAmount.toLocaleString()} due
+            </span>
+          )}
+        </div>
 
-                            <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
-                              <span className="flex items-center">
-                                <span className="mr-1">{icons.calendar}</span>
-                                Due: {formatDate(order.dueDate)}
-                              </span>
-                              <span className="flex items-center">
-                                <span className="mr-1">{icons.dollar}</span>
-                                ₹{order.pricing.totalAmount.toLocaleString()}
-                              </span>
-                            </div>
-
-                            {/* Progress Bar */}
-                            <div className="pt-2">
-                              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                <div
-                                  className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                                  style={{ width: `${order.progress}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-xs text-gray-500 mt-1 inline-block">
-                                {order.progress}% complete
-                              </span>
-                            </div>
-
-                            {/* Contact Info */}
-                            <div className="flex items-center text-xs text-gray-400">
-                              <span className="mr-1">{icons.phone}</span>
-                              <span>{order.phone}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+        {/* Progress Bar - Visual status */}
+        <div className="pt-1">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                order.progress === 100 ? 'bg-green-500' : 
+                order.progress >= 65 ? 'bg-blue-500' : 
+                order.progress >= 35 ? 'bg-yellow-500' : 'bg-orange-500'
+              }`}
+              style={{ width: `${order.progress}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+})}
                   </div>
 
                   {/* Empty State */}
