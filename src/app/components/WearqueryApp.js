@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, createContext, useContext } from "react";
-import Image from "next/Image"
+import Image from "next/image"
 
 // Mock data for professional demo
 const mockOrders = [
@@ -379,7 +379,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-purple-600">
             <div className="flex items-center">
               <div className="h-10 w-10 rounded-lg flex items-center justify-center text-2xl">
-                <Image src="/images/WearQL-logo.png" width={10} height={10}/>
+                <Image 
+  src="/WearQL-logo.png" 
+  alt="WearQL Logo" 
+  width={40} 
+  height={40}
+  className="rounded-lg"
+/>
               </div>
               <div className="ml-3">
                 <h1 className="text-lg font-bold text-white">WearQL</h1>
@@ -490,25 +496,19 @@ const Header = ({ setSidebarOpen }) => {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            {/* Quick Add */}
-            <button
-              onClick={() => setShowOrderModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 flex items-center transition-all duration-200 shadow-sm"
-            >
-              <span className="mr-2">{icons.plus}</span>
-              New Order
-            </button>
-
             {/* Notifications */}
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="p-2 text-gray-400 hover:text-gray-500 relative text-xl"
               >
-                {icons.bell}
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {analytics.urgentOrders}
-                </span>
+                <Image 
+  src="/notifications.png" 
+  alt="notifications" 
+  width={30} 
+  height={30}
+  className="rounded-lg"
+/>
               </button>
 
               {showNotifications && (
@@ -595,25 +595,21 @@ const Dashboard = () => {
       title: "Total Orders",
       value: analytics.totalOrders,
       icon: icons.package,
-      color: "bg-blue-500",
     },
     {
       title: "Revenue",
       value: `₹${analytics.totalRevenue.toLocaleString()}`,
       icon: icons.dollar,
-      color: "bg-green-500",
     },
     {
       title: "In Progress",
       value: analytics.inProgressOrders,
       icon: icons.clock,
-      color: "bg-yellow-500",
     },
     {
       title: "Completion Rate",
       value: `${analytics.completionRate}%`,
       icon: icons.trending,
-      color: "bg-purple-500",
     },
   ];
 
